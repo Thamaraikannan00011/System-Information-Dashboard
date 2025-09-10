@@ -139,35 +139,35 @@ display_header(){
     echo -e "${bold}${bg_white}${black}=======================================================================${reset}"
     echo 
 
-    echo -e "${dim}${red}${bg_white}last updated: `date +"%Y-%m-%d %T"`${reset}"
+    echo -e "${dim}${red}last updated: `date +"%Y-%m-%d %T"`${reset}"
     echo
 }
 
 system_info() {
-    echo -e "${bold}${cyan}${underline}------------------------- System Information -------------------------${reset}"
+    echo -e "${bold}${cyan}------------------------- ${white}System Information${reset}${cyan} -------------------------${reset}"
     echo
-    printf "${bold}${bg_green}%-20s${reset}: %s\n" "Hostname" "$(hostname)"
-    printf "${bold}${bg_green}%-20s${reset}: %s\n" "Current Username" "$(whoami)"
-    printf "${bold}${bg_green}%-20s${reset}: %s\n" "Operating System" "$(uname -s)"
-    printf "${bold}${bg_green}%-20s${reset}: %s\n" "Kernel Version" "$(uname -r)"
-    printf "${bold}${bg_green}%-20s${reset}: %s\n" "Architecture" "$(uname -m)"
-    printf "${bold}${bg_green}%-20s${reset}: %s\n" "Uptime" "$(get_uptime)"
-    printf "${bold}${bg_green}%-20s${reset}: %s\n" "Date" "$(date)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Hostname" "$(hostname)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Current Username" "$(whoami)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Operating System" "$(uname -s)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Kernel Version" "$(uname -r)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Architecture" "$(uname -m)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Uptime" "$(get_uptime)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Date" "$(date)"
     echo
 }
 
 cpu_info(){
-    echo -e "-------------------------- CPUs Information --------------------------"
+    echo -e "${bold}${cyan}-------------------------- ${white}CPUs Information${reset}${cyan} --------------------------${reset}"
     echo 
     local logical_core=$(grep "cpu cores" /proc/cpuinfo | head -1 | cut -d':' -f2 | sed 's/^ *//')
     local physical_core=$(nproc)
     local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
     local load_avg=$(uptime | awk -F'load average:' '{print $2}' | sed 's/^ *//')
-    printf "${bold}${bg_magenta}%-20s${reset}: ${bg_black}${white}%-30s${reset}\n" "CPU Model" "$(grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2 | sed 's/^ *//')"
-    printf "${bold}${bg_magenta}%-20s${reset}: ${bg_black}${white}%-30s${reset}\n" "CPU Cores" "$logical_core Logical, $physical_core Physical"
-    printf "${bold}${bg_magenta}%-20s${reset}: ${bg_black}${white}%-30s${reset}\n" "Frequency" "$(grep "cpu MHz" /proc/cpuinfo | head -1 | cut -d':' -f2 | sed 's/^ *//' | cut -d'.' -f1) MHz"
-    printf "${bold}${bg_magenta}%-20s${reset}: ${bg_black}${white}%-30s${reset}\n" "CPU Usage" "$(progress_bar ${cpu_usage%.*})"
-    printf "${bold}${bg_magenta}%-20s${reset}: ${bg_black}${white}%-30s${reset}\n" "Load Average" "$load_avg"
+    printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "CPU Model" "$(grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2 | sed 's/^ *//')"
+    printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "CPU Cores" "$logical_core Logical, $physical_core Physical"
+    printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "Frequency" "$(grep "cpu MHz" /proc/cpuinfo | head -1 | cut -d':' -f2 | sed 's/^ *//' | cut -d'.' -f1) MHz"
+    printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "CPU Usage" "$(progress_bar ${cpu_usage%.*})"
+    printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "Load Average" "$load_avg"
     
 }
 
