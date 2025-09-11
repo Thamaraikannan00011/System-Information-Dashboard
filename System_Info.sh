@@ -60,8 +60,6 @@ progress_bar() {
     local percentage=$1    # Get the percentage from first argument
     local width=20         # Set bar width to 20 characters
     
-    # Calculate how many characters should be filled
-    # Uses bash arithmetic: $((expression))
     local filled=$((percentage * width / 100))
     local empty=$((width - filled))
     
@@ -93,42 +91,20 @@ bytes_to_human() {
 # convert the uptime to day, hour, minutes
 
 get_uptime() {
-    # Check if /proc/uptime file exists (Linux-specific)
-    # This file contains system uptime information
     if [[ ! -f /proc/uptime ]]; then
         echo "Error: /proc/uptime not found"
-        return 1  # Return error code 1 if file doesn't exist
+        return 1 
     fi
-    
-    # Extract uptime in seconds from /proc/uptime
-    # /proc/uptime format: "12345.67 9876.54" (first field = system uptime in seconds)
-    # awk '{print int($1)}' gets the first field and converts it to integer
-    # 2>/dev/null suppresses any error messages from awk
     local uptime_seconds=$(awk '{print int($1)}' /proc/uptime 2>/dev/null)
     
-    # Verify that we successfully read the uptime value
-    # -z checks if the variable is empty/null
     if [[ -z "$uptime_seconds" ]]; then
         echo "Error: Could not read uptime"
-        return 1  # Return error code 1 if reading failed
+        return 1 
     fi
-    
-    # Calculate days: total seconds divided by seconds in a day (86400)
-    # 86400 = 24 hours * 60 minutes * 60 seconds
     local days=$((uptime_seconds / 86400))
-    
-    # Calculate hours: remaining seconds after removing days, divided by seconds in an hour (3600)
-    # % 86400 gives the remainder after dividing by seconds per day
-    # / 3600 converts remaining seconds to hours
-    local hours=$(((uptime_seconds % 86400) / 3600))
-    
-    # Calculate minutes: remaining seconds after removing hours, divided by seconds in a minute (60)
-    # % 3600 gives the remainder after dividing by seconds per hour
-    # / 60 converts remaining seconds to minutes
+    local hours=$(((uptime_seconds % 86400) / 360))
     local minutes=$(((uptime_seconds % 3600) / 60))
     
-    # Output the formatted uptime string
-    # Example: "3d 12h 45m"
     echo "${days}d ${hours}h ${minutes}m"
 }
 
@@ -143,8 +119,14 @@ display_header(){
     echo
 }
 
+:'
+    the resources for system information 
+    commands : hostname, uname, date
+    file sys : /proc/uptime
+' 
+
 system_info() {
-    echo -e "${bold}${cyan}------------------------- ${white}System Information${reset}${cyan} -------------------------${reset}"
+    echo -e "${bold}${cyan}---------------------- ${white}System Information${reset}${cyan} ----------------------------${reset}"
     echo
     printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Hostname" "$(hostname)"
     printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Current Username" "$(whoami)"
@@ -156,8 +138,14 @@ system_info() {
     echo
 }
 
+:'
+    the resources for cpu information 
+    commands : top, nproc, uptime
+    file sys : /proc/cpuinfo
+' 
+
 cpu_info(){
-    echo -e "${bold}${cyan}-------------------------- ${white}CPUs Information${reset}${cyan} --------------------------${reset}"
+    echo -e "${bold}${cyan}---------------------- ${white}CPUs Information${reset}${cyan} ------------------------------${reset}"
     echo 
     local logical_core=$(grep "cpu cores" /proc/cpuinfo | head -1 | cut -d':' -f2 | sed 's/^ *//')
     local physical_core=$(nproc)
@@ -168,7 +156,52 @@ cpu_info(){
     printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "Frequency" "$(grep "cpu MHz" /proc/cpuinfo | head -1 | cut -d':' -f2 | sed 's/^ *//' | cut -d'.' -f1) MHz"
     printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "CPU Usage" "$(progress_bar ${cpu_usage%.*})"
     printf "${bold}${bg_magenta}%-20s${reset} : ${bg_red}%-47s${reset}\n" "Load Average" "$load_avg"
+    echo
+}
+
+:'
+    the resources for mem information 
+    commands : free
+    file sys : /proc/meminfo
+' 
+
+mem_info(){
+    echo -e "${bold}${cyan}---------------------- ${white}memory Information${reset}${cyan} ----------------------------${reset}"
+    echo 
+    local mem_total=$(grep MemTotal /proc/meminfo | awk '{print $2}')        # Total physical memory
+    local mem_free=$(grep MemFree /proc/meminfo | awk '{print $2}')          # Completely free memory
+    local mem_available=$(grep MemAvailable /proc/meminfo | awk '{print $2}') # Available for new processes
+    local mem_used=$((mem_total - mem_available))
+    local mem_usage_percent=$((mem_used * 100 / mem_total))
+
+    mem_total_gb=$(awk "BEGIN {printf \"%.1f\", $mem_total / 1024 / 1024 }")
+    mem_used_gb=$(awk "BEGIN {printf \"%.1f\", $mem_used / 1024 / 1024 }")
+    mem_available_gb=$(awk "BEGIN {printf \"%.1f\", $mem_available / 1024 / 1024}")
     
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Total Memory" "$mem_total_gb GB"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Used Memory" "$mem_used_gb GB"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Available Memory" "$mem_available_gb GB"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s ${reset}\n" "Memory usage" "$(progress_bar $mem_usage_percent)"
+    
+    local swap_total=$(grep SwapTotal /proc/meminfo | awk '{print $2}')
+    local swap_free=$(grep SwapFree /proc/meminfo | awk '{print $2}')
+    local swap_used=$((swap_total - swap_free))
+    
+    # Only show swap info if swap is configured
+    if [ $swap_total -gt 0 ]; then
+        local swap_usage_percent=$((swap_used * 100 / swap_total))
+        
+        # Convert swap to GB with decimal precision
+        swap_total_gb=$(awk "BEGIN {printf \"%.1f\", $swap_total / 1024 / 1024}")
+        swap_used_gb=$(awk "BEGIN {printf \"%.1f\", $swap_used / 1024 / 1024}")
+        
+        printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Swap Total" "$swap_total_gb GB"
+        printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Swap Used" "$swap_used_gb GB"
+        printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s ${reset}\n" "Swap Usage" "$(progress_bar $swap_usage_percent)"
+    else
+        printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Swap" "Not configured"
+    fi
+
 }
 
 main() {
@@ -179,24 +212,13 @@ main() {
     
     # Infinite loop to continuously update display
     while true; do
-        # Call all display functions in order
-        display_header          # Clear screen and show title
-        system_info            # Show system information
+        display_header
+        system_info
         cpu_info
+        mem_info
         # Wait 5 seconds before next update
-        # This prevents excessive CPU usage from constant updates
         sleep 10
     done
 }
 
-main
-
-
-
-
-
-
-
-
-
-
+main # starts execution 
