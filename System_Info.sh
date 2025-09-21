@@ -166,7 +166,7 @@ cpu_info(){
 ' 
 
 mem_info(){
-    echo -e "${bold}${cyan}---------------------- ${white}memory Information${reset}${cyan} ----------------------------${reset}"
+    echo -e "${bold}${cyan}---------------------- ${white}Memory Information${reset}${cyan} ----------------------------${reset}"
     echo 
     local mem_total=$(grep MemTotal /proc/meminfo | awk '{print $2}')        # Total physical memory
     local mem_free=$(grep MemFree /proc/meminfo | awk '{print $2}')          # Completely free memory
@@ -181,7 +181,7 @@ mem_info(){
     printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Total Memory" "$mem_total_gb GB"
     printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Used Memory" "$mem_used_gb GB"
     printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Available Memory" "$mem_available_gb GB"
-    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s ${reset}\n" "Memory usage" "$(progress_bar $mem_usage_percent)"
+    printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-46s ${reset}\n" "Memory usage" "$(progress_bar $mem_usage_percent)"
     
     local swap_total=$(grep SwapTotal /proc/meminfo | awk '{print $2}')
     local swap_free=$(grep SwapFree /proc/meminfo | awk '{print $2}')
@@ -197,11 +197,39 @@ mem_info(){
         
         printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Swap Total" "$swap_total_gb GB"
         printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Swap Used" "$swap_used_gb GB"
-        printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s ${reset}\n" "Swap Usage" "$(progress_bar $swap_usage_percent)"
+        printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-46s ${reset}\n" "Swap Usage" "$(progress_bar $swap_usage_percent)"
     else
         printf "${bold}${bg_green}%-20s${reset} : ${bg_yellow}%-47s${reset}\n" "Swap" "Not configured"
     fi
+    echo
+}
 
+:'
+    the resource for disk information
+    command : df 
+    file system : 
+'
+
+disk_info(){
+    echo -e "${bold}${cyan}---------------------- ${white}Disk Information${reset}${cyan} ------------------------------${reset}"
+    echo 
+
+    df -h | grep -E '^/dev/' | while read filesystem size used avail usage mount; do
+        usage_percent=${usage%\%}
+        bar_output=$(progress_bar $usage_percent)
+
+        printf "${bold}${bg_cyan}%-30s${reset} : ${bg_white}${black}${blink}${italic}%-37s${reset}\n" "FileSystem" "${filesystem}"
+        printf "${bold}${bg_cyan}%-30s${reset} : ${bg_white}${black}%-37s${reset}\n" "Size | Used | Available" "${size} | ${used} | ${avail}"
+        printf "${bold}${bg_cyan}%-30s${reset} : ${bg_white}${black}%-37s${reset}\n" "Usage" "${bar_output}"
+        echo
+    done
+
+    echo
+}
+
+display_footer() {
+    echo -e "${red}Press ${green}Ctrl+C${red} to exit | Refreshes every 10 seconds${reset}"
+    echo
 }
 
 main() {
@@ -216,7 +244,9 @@ main() {
         system_info
         cpu_info
         mem_info
-        # Wait 5 seconds before next update
+        disk_info
+        display_footer
+        # Wait 10 seconds before next update
         sleep 10
     done
 }
