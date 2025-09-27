@@ -2,7 +2,7 @@
 
 #colour formatting
 
-:' ========== MULTILINE COMMENT ==========
+: <<'COMMENT'
    syntax = '\033[type;color"m"'
    where, 
    type
@@ -22,7 +22,8 @@
 	35-magenta
 	36-cyan
 	37-white
-'
+COMMENT
+
 # colour 
 black='\033[30m'
 red='\033[31m'
@@ -109,7 +110,6 @@ get_uptime() {
 }
 
 display_header(){
-    clear
     echo -e "${bold}${bg_white}${black}=======================================================================${reset}"
     echo -e "${bold}${bg_white}                        ${black}SYSTEM INFORMATION DASHBOARD${reset}${bg_white}                   ${reset}"
     echo -e "${bold}${bg_white}${black}=======================================================================${reset}"
@@ -119,11 +119,9 @@ display_header(){
     echo
 }
 
-:'
-    the resources for system information 
-    commands : hostname, uname, date
-    file sys : /proc/uptime
-' 
+#   the resources for system information 
+#   commands : hostname, uname, date
+#    file sys : /proc/uptime
 
 system_info() {
     echo -e "${bold}${cyan}---------------------- ${white}System Information${reset}${cyan} ----------------------------${reset}"
@@ -138,11 +136,9 @@ system_info() {
     echo
 }
 
-:'
-    the resources for cpu information 
-    commands : top, nproc, uptime
-    file sys : /proc/cpuinfo
-' 
+#   the resources for cpu information 
+#   commands : top, nproc, uptime
+#    file sys : /proc/cpuinfo
 
 cpu_info(){
     echo -e "${bold}${cyan}---------------------- ${white}CPUs Information${reset}${cyan} ------------------------------${reset}"
@@ -159,11 +155,9 @@ cpu_info(){
     echo
 }
 
-:'
-    the resources for mem information 
-    commands : free
-    file sys : /proc/meminfo
-' 
+#   the resources for mem information 
+#   commands : free
+#   file sys : /proc/meminfo
 
 mem_info(){
     echo -e "${bold}${cyan}---------------------- ${white}Memory Information${reset}${cyan} ----------------------------${reset}"
@@ -204,11 +198,9 @@ mem_info(){
     echo
 }
 
-:'
-    the resource for disk information
-    command : df 
-    file system : 
-'
+#   the resource for disk information
+#   command : df 
+#   file system : 
 
 disk_info(){
     echo -e "${bold}${cyan}---------------------- ${white}Disk Information${reset}${cyan} ------------------------------${reset}"
